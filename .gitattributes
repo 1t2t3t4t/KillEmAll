@@ -1,0 +1,1 @@
+Content/Assets/**/*.uasset filter=lfs diff=lfs merge=lfs -text
