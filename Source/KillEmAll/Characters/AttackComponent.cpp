@@ -54,7 +54,8 @@ void UAttackComponent::AddAttackSocket(const FName Name)
 void UAttackComponent::Attack()
 {
 	GetWorld()->GetTimerManager().ClearTimer(SequenceCancelHandler);
-	GetWorld()->GetTimerManager().SetTimer(SequenceCancelHandler, this, &UAttackComponent::CancelQueueSequence, ComboCancelTime);
+	GetWorld()->GetTimerManager().SetTimer(SequenceCancelHandler, this, &UAttackComponent::CancelQueueSequence,
+	                                       ComboCancelTime);
 
 	if (bIsPlaying && !bQueueNext)
 	{
@@ -85,6 +86,7 @@ void UAttackComponent::OnAttackEnd()
 {
 	bIsAttacking = false;
 	PrevAttackPointMap.Reset();
+	HitActors.Reset();
 
 	if (bQueueNext)
 	{
@@ -156,6 +158,11 @@ void UAttackComponent::OnHit(const FHitResult& HitResult)
 {
 	if (AActor* HitActor = HitResult.GetActor())
 	{
+		if (HitActors.Contains(HitActor))
+		{
+			return;
+		}
+		HitActors.AddUnique(HitActor);
 		const auto CurrentAttack = AttackSequence[CurrentAtkIdx];
 		UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *HitActor->GetName());
 		UGameplayStatics::ApplyDamage(HitActor, CurrentAttack->Damage, GetOwner()->GetInstigatorController(),

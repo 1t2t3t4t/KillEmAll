@@ -33,6 +33,9 @@ private:
 
 	UPROPERTY()
 	class UMovementComponent* MovementComponent;
+
+	UPROPERTY()
+	TArray<AActor*> HitActors;
 	
 	uint32 CurrentAtkIdx = 0;
 
