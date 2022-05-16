@@ -17,10 +17,13 @@ private:
 	TMap<FName, FVector> PrevAttackPointMap;
 
 	UPROPERTY(VisibleAnywhere)
-	bool bIsAttacking = false;
+	bool bIsAttacking = false; // For line tracing
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<UAttackAnimData*> AttackSequence;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ComboCancelTime = 0.1;
 
 	UPROPERTY()
 	TArray<FName> AttackSocketNames;
@@ -33,9 +36,11 @@ private:
 	
 	uint32 CurrentAtkIdx = 0;
 
+	// For attack sequence playing
 	bool bIsPlaying = false;
-
 	bool bQueueNext = false;
+
+	FTimerHandle SequenceCancelHandler;
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -62,8 +67,12 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
+	void OnHit(const FHitResult& HitResult);
 
 private:
 	UFUNCTION()
 	void OnMontageEnded(UAnimMontage* Montage, bool bIsInterrupted);
+
+	UFUNCTION()
+	void CancelQueueSequence();
 };

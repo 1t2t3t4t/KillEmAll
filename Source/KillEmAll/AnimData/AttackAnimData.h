@@ -23,4 +23,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FName> AttackSocketNames;
+
+	UPROPERTY(EditDefaultsOnly)
+	float Damage = 20.f;
 };

@@ -6,6 +6,7 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/MovementComponent.h"
 #include "KillEmAll/Utils.h"
+#include "Kismet/GameplayStatics.h"
 
 UAttackComponent::UAttackComponent()
 {
@@ -34,6 +35,7 @@ void UAttackComponent::BeginPlay()
 
 void UAttackComponent::ResetAttackState()
 {
+	GetWorld()->GetTimerManager().ClearTimer(SequenceCancelHandler);
 	CurrentAtkIdx = 0;
 	bQueueNext = false;
 	bIsPlaying = false;
@@ -51,10 +53,12 @@ void UAttackComponent::AddAttackSocket(const FName Name)
 
 void UAttackComponent::Attack()
 {
+	GetWorld()->GetTimerManager().ClearTimer(SequenceCancelHandler);
+	GetWorld()->GetTimerManager().SetTimer(SequenceCancelHandler, this, &UAttackComponent::CancelQueueSequence, ComboCancelTime);
+
 	if (bIsPlaying && !bQueueNext)
 	{
 		bQueueNext = true;
-		CurrentAtkIdx = (CurrentAtkIdx + 1) % AttackSequence.Num();
 	}
 	else if (!bIsPlaying)
 	{
@@ -81,20 +85,30 @@ void UAttackComponent::OnAttackEnd()
 {
 	bIsAttacking = false;
 	PrevAttackPointMap.Reset();
+
+	if (bQueueNext)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(SequenceCancelHandler);
+		bIsPlaying = false;
+		bQueueNext = false;
+		CurrentAtkIdx = (CurrentAtkIdx + 1) % AttackSequence.Num();
+		Attack();
+	}
 }
 
 void UAttackComponent::OnMontageEnded(UAnimMontage* Montage, bool bIsInterrupted)
 {
-	bIsPlaying = false;
-	if (bQueueNext)
+	if (!bIsInterrupted)
 	{
-		bQueueNext = false;
-		Attack();
-	}
-	else
-	{
+		bIsPlaying = false;
 		ResetAttackState();
 	}
+}
+
+void UAttackComponent::CancelQueueSequence()
+{
+	bQueueNext = false;
+	UE_LOG(LogTemp, Warning, TEXT("Clear queue"));
 }
 
 void UAttackComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -115,20 +129,36 @@ void UAttackComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 			if (PrevAttackPointMap.Contains(Socket))
 			{
 				auto PrevPoint = PrevAttackPointMap[Socket];
+
 				FHitResult Hit;
+
 				FCollisionObjectQueryParams Params(ECC_Pawn);
+
 				FCollisionQueryParams QueryParams;
 				QueryParams.AddIgnoredActor(GetOwner());
+
 				const auto bIsHit = GetWorld()->LineTraceSingleByObjectType(
 					Hit, PrevPoint, SocketLoc, Params, QueryParams);
 				DrawDebugLine(GetWorld(), PrevPoint, SocketLoc, FColor::Red, false, 5);
+
 				if (bIsHit)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *Hit.GetActor()->GetName());
+					OnHit(Hit);
 				}
 			}
 
 			PrevAttackPointMap.Add(Socket, SocketLoc);
 		}
+	}
+}
+
+void UAttackComponent::OnHit(const FHitResult& HitResult)
+{
+	if (AActor* HitActor = HitResult.GetActor())
+	{
+		const auto CurrentAttack = AttackSequence[CurrentAtkIdx];
+		UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *HitActor->GetName());
+		UGameplayStatics::ApplyDamage(HitActor, CurrentAttack->Damage, GetOwner()->GetInstigatorController(),
+		                              GetOwner(), UDamageType::StaticClass());
 	}
 }
