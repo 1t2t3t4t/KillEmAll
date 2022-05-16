@@ -4,6 +4,8 @@
 #include "AttackComponent.h"
 
 #include "DrawDebugHelpers.h"
+#include "GameFramework/MovementComponent.h"
+#include "KillEmAll/Utils.h"
 
 UAttackComponent::UAttackComponent()
 {
@@ -19,13 +21,55 @@ void UAttackComponent::BeginPlay()
 			GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass())))
 		{
 			SkeletalMeshComponent = Comp;
+			AnimInstance = Utils::NullCheck(SkeletalMeshComponent->GetAnimInstance());
+			AnimInstance->OnMontageEnded.AddUniqueDynamic(this, &UAttackComponent::OnMontageEnded);
 		}
+		if (UMovementComponent* Comp = Cast<UMovementComponent>(
+			GetOwner()->GetComponentByClass(UMovementComponent::StaticClass())))
+		{
+			MovementComponent = Comp;
+		}
+	}
+}
+
+void UAttackComponent::ResetAttackState()
+{
+	CurrentAtkIdx = 0;
+	bQueueNext = false;
+	bIsPlaying = false;
+	bIsAttacking = false;
+	if (MovementComponent)
+	{
+		MovementComponent->SetActive(true);
 	}
 }
 
 void UAttackComponent::AddAttackSocket(const FName Name)
 {
 	AttackSocketNames.Push(Name);
+}
+
+void UAttackComponent::Attack()
+{
+	if (bIsPlaying && !bQueueNext)
+	{
+		bQueueNext = true;
+		CurrentAtkIdx = (CurrentAtkIdx + 1) % AttackSequence.Num();
+	}
+	else if (!bIsPlaying)
+	{
+		bIsPlaying = true;
+		const auto CurrentAttack = AttackSequence[CurrentAtkIdx];
+		if (const auto Montage = Utils::NullCheck(CurrentAttack->Montage.Get()))
+		{
+			AnimInstance->Montage_Play(Montage);
+			AttackSocketNames = CurrentAttack->AttackSocketNames;
+			if (MovementComponent)
+			{
+				MovementComponent->SetActive(!CurrentAttack->bLockMovement);
+			}
+		}
+	}
 }
 
 void UAttackComponent::OnAttackStart()
@@ -37,6 +81,20 @@ void UAttackComponent::OnAttackEnd()
 {
 	bIsAttacking = false;
 	PrevAttackPointMap.Reset();
+}
+
+void UAttackComponent::OnMontageEnded(UAnimMontage* Montage, bool bIsInterrupted)
+{
+	bIsPlaying = false;
+	if (bQueueNext)
+	{
+		bQueueNext = false;
+		Attack();
+	}
+	else
+	{
+		ResetAttackState();
+	}
 }
 
 void UAttackComponent::TickComponent(float DeltaTime, ELevelTick TickType,

@@ -16,14 +16,9 @@ private:
 	float Speed = 100.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* PunchAnim;
-
-	UPROPERTY(EditDefaultsOnly)
 	class UAttackComponent* AttackComponent;
 
 public:
-	static FName LeftHandSocketName;
-	
 	// Sets default values for this character's properties
 	ABaseCharacter();
 

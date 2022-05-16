@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "KillEmAll/AnimData/AttackAnimData.h"
 #include "AttackComponent.generated.h"
 
 UCLASS(ClassGroup=(Gameplay), meta=(BlueprintSpawnableComponent))
@@ -14,12 +15,27 @@ class KILLEMALL_API UAttackComponent : public UActorComponent
 private:
 	UPROPERTY(VisibleAnywhere)
 	TMap<FName, FVector> PrevAttackPointMap;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FName> AttackSocketNames;
 
 	UPROPERTY(VisibleAnywhere)
 	bool bIsAttacking = false;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<UAttackAnimData*> AttackSequence;
+
+	UPROPERTY()
+	TArray<FName> AttackSocketNames;
+
+	UPROPERTY()
+	UAnimInstance* AnimInstance;
+
+	UPROPERTY()
+	class UMovementComponent* MovementComponent;
+	
+	uint32 CurrentAtkIdx = 0;
+
+	bool bIsPlaying = false;
+
+	bool bQueueNext = false;
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -31,9 +47,11 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	void ResetAttackState();
 
 public:
 	void AddAttackSocket(const FName Name);
+	void Attack();
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void OnAttackStart();
@@ -44,4 +62,8 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
+
+private:
+	UFUNCTION()
+	void OnMontageEnded(UAnimMontage* Montage, bool bIsInterrupted);
 };

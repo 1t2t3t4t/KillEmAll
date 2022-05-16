@@ -8,8 +8,6 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-FName ABaseCharacter::LeftHandSocketName = TEXT("LeftHandSocket");
-
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
@@ -17,7 +15,6 @@ ABaseCharacter::ABaseCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	AttackComponent = CreateDefaultSubobject<UAttackComponent>(TEXT("Attack Component"));
-	AttackComponent->AddAttackSocket(LeftHandSocketName);
 }
 
 // Called when the game starts or when spawned
@@ -48,7 +45,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void ABaseCharacter::Attack()
 {
-	GetMesh()->GetAnimInstance()->Montage_Play(PunchAnim);
+	AttackComponent->Attack();
 }
 
 void ABaseCharacter::MoveRight(float Value)
