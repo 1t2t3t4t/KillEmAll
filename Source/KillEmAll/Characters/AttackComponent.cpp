@@ -65,7 +65,7 @@ void UAttackComponent::Attack()
 	{
 		bIsPlaying = true;
 		const auto CurrentAttack = AttackSequence[CurrentAtkIdx];
-		if (const auto Montage = Utils::NullCheck(CurrentAttack->Montage.Get()))
+		if (const auto Montage = Utils::NullCheck(CurrentAttack->Montage.LoadSynchronous()))
 		{
 			AnimInstance->Montage_Play(Montage);
 			AttackSocketNames = CurrentAttack->AttackSocketNames;
