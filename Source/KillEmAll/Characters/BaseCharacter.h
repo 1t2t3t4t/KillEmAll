@@ -18,6 +18,9 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	class UAttackComponent* AttackComponent;
 
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* HurtAnimMontage;
+
 public:
 	// Sets default values for this character's properties
 	ABaseCharacter();
@@ -35,7 +38,7 @@ public:
 
 protected:
 	virtual void Attack();
-	
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 private:
 	void MoveRight(float Value);
 	void Jump();

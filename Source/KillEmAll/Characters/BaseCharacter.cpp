@@ -48,6 +48,18 @@ void ABaseCharacter::Attack()
 	AttackComponent->Attack();
 }
 
+float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	const auto Result = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	if (GetMesh() && GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(HurtAnimMontage);
+	}
+
+	return Result;
+}
+
 void ABaseCharacter::MoveRight(float Value)
 {
 	AddMovementInput(FVector::ForwardVector, Value * Speed);
