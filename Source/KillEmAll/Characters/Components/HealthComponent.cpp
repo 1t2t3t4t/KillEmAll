@@ -15,8 +15,8 @@ void UHealthComponent::TakeDamage(const float Damage)
 {
 	const float AdjustedDamage = Damage > Health ? Health : Damage;
 	Health -= AdjustedDamage;
-	if (Health <= 0 && OnDead.IsBound())
+	if (Health <= 0)
 	{
-		OnDead.Broadcast();
+		OnDead.Execute();
 	}
 }

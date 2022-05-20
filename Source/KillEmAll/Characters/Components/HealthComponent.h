@@ -12,12 +12,12 @@ class KILLEMALL_API UHealthComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
+	DECLARE_DELEGATE(FOnDead);
+	
 	UPROPERTY(EditDefaultsOnly)
 	float Health = 100.f;
 
 public:
-	DECLARE_EVENT(UHealthComponent, FOnDead);
-	
 	FOnDead OnDead;
 	
 	UHealthComponent();

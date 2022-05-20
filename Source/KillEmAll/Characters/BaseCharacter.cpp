@@ -26,7 +26,7 @@ void ABaseCharacter::BeginPlay()
 	GetMovementComponent()->SetPlaneConstraintEnabled(true);
 	GetMovementComponent()->SetPlaneConstraintAxisSetting(EPlaneConstraintAxisSetting::Y);
 
-	HealthComponent->OnDead.AddUObject(this, &ABaseCharacter::OnDead);
+	HealthComponent->OnDead.BindUObject(this, &ABaseCharacter::OnDead);
 }
 
 // Called every frame
