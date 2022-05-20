@@ -3,8 +3,8 @@
 
 #include "BaseCharacter.h"
 
-#include "AttackComponent.h"
-#include "Components/CapsuleComponent.h"
+#include "Components/AttackComponent.h"
+#include "Components/HealthComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -15,6 +15,7 @@ ABaseCharacter::ABaseCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	AttackComponent = CreateDefaultSubobject<UAttackComponent>(TEXT("Attack Component"));
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +25,8 @@ void ABaseCharacter::BeginPlay()
 
 	GetMovementComponent()->SetPlaneConstraintEnabled(true);
 	GetMovementComponent()->SetPlaneConstraintAxisSetting(EPlaneConstraintAxisSetting::Y);
+
+	HealthComponent->OnDead.AddUObject(this, &ABaseCharacter::OnDead);
 }
 
 // Called every frame
@@ -57,6 +60,11 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 		GetMesh()->GetAnimInstance()->Montage_Play(HurtAnimMontage);
 	}
 
+	if (HealthComponent)
+	{
+		HealthComponent->TakeDamage(DamageAmount);
+	}
+	
 	return Result;
 }
 
@@ -68,5 +76,11 @@ void ABaseCharacter::MoveRight(float Value)
 void ABaseCharacter::Jump()
 {
 	Super::Jump();
+}
+
+void ABaseCharacter::OnDead()
+{
+	UE_LOG(LogTemp, Display, TEXT("Character %s dead"), *GetName());
+	Destroy();
 }
 

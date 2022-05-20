@@ -19,6 +19,9 @@ private:
 	class UAttackComponent* AttackComponent;
 
 	UPROPERTY(EditDefaultsOnly)
+	class UHealthComponent* HealthComponent;
+
+	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* HurtAnimMontage;
 
 public:
@@ -39,7 +42,11 @@ public:
 protected:
 	virtual void Attack();
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
 private:
 	void MoveRight(float Value);
 	void Jump();
+
+	UFUNCTION()
+	void OnDead();
 };
